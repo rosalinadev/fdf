@@ -6,13 +6,14 @@
 #    By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/06 16:11:02 by rvandepu          #+#    #+#              #
-#    Updated: 2024/01/06 19:08:05 by rvandepu         ###   ########.fr        #
+#    Updated: 2024/01/11 21:44:13 by rvandepu         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME := fdf
 
 FILES  := fdf \
+		  draw_utils \
 
 OBJ := $(FILES:%=%.o)
 
@@ -53,10 +54,10 @@ test: CFLAGS += -g
 test: re
 
 $(LIBFT_PATH):
-	$(MAKE) -C $(LIBFT_DIR) $(LIBFT)
+	$(MAKE) -C $(LIBFT_DIR) $(LIBFT) -j $$(nproc)
 
 $(LIBMLX_PATH):
 	cmake -S $(LIBMLX_DIR) -B $(LIBMLX_DIR)/build
-	$(MAKE) -C $(LIBMLX_DIR)/build
+	$(MAKE) -C $(LIBMLX_DIR)/build -j $$(nproc)
 
-$(NAME): | $(LIBFT_PATH) $(LIBMLX_PATH)
+$(NAME): $(OBJ)| $(LIBFT_PATH) $(LIBMLX_PATH)
