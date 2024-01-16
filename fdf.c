@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 16:57:19 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/12 09:07:13 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/16 09:41:46 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,11 +31,39 @@ void	ft_hook(void *state)
 	}
 }
 
-// TODO finir fdf
-int	main(void)
+void	traverse(t_btree *node)
+{
+	ft_printf("[node] val: %d\n", node->value);
+	ft_printf("       color: %#X\n", node->color);
+	if (node->left)
+		ft_printf("       left: %d\n", node->left->value);
+	if (node->right)
+		ft_printf("       right: %d\n", node->right->value);
+	node->checked = !node->checked;
+	if (node->left && node->checked != node->left->checked)
+	{
+		ft_printf("[%2d]   going left...\n", node->value);
+		traverse(node->left);
+	}
+	if (node->right && node->checked != node->right->checked)
+	{
+		ft_printf("[%2d]   going right...\n", node->value);
+		traverse(node->right);
+	}
+}
+
+int	main(int argc, char *argv[])
 {
 	t_fdf	fdf;
+	t_mesh	*mesh;
 
+	if (argc != 2)
+		return (EXIT_FAILURE);
+	mesh = load_map(argv[1]);
+	ft_printf("mesh: %p\n", mesh);
+	if (mesh) traverse(mesh->values);
+	free_mesh(mesh, NULL);
+	//return (EXIT_SUCCESS);
 	fdf.mlx = mlx_init(WIDTH, HEIGHT, "fdf", false);
 	if (!fdf.mlx)
 		return (EXIT_FAILURE);

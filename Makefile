@@ -6,7 +6,7 @@
 #    By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/06 16:11:02 by rvandepu          #+#    #+#              #
-#    Updated: 2024/01/11 21:44:13 by rvandepu         ###   ########.fr        #
+#    Updated: 2024/01/16 12:53:08 by rvandepu         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,6 +14,8 @@ NAME := fdf
 
 FILES  := fdf \
 		  draw_utils \
+		  map_loader \
+		  parse_utils \
 
 OBJ := $(FILES:%=%.o)
 
@@ -60,4 +62,4 @@ $(LIBMLX_PATH):
 	cmake -S $(LIBMLX_DIR) -B $(LIBMLX_DIR)/build
 	$(MAKE) -C $(LIBMLX_DIR)/build -j $$(nproc)
 
-$(NAME): $(OBJ)| $(LIBFT_PATH) $(LIBMLX_PATH)
+$(NAME): $(OBJ) | $(LIBFT_PATH) $(LIBMLX_PATH)
