@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 18:09:07 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/16 08:18:10 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/20 12:54:10 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 # include "libft.h"
 
 # define DEFAULT_COLOR 0xFFFFFF
+# define DEFAULT_ALPHA 0xFF
 
 typedef struct s_btree
 {
@@ -61,12 +62,22 @@ typedef struct s_vec3
 	float	z;
 }	t_vec3;
 
+typedef struct s_vec4
+{
+	float	x;
+	float	y;
+	float	z;
+	float	w;
+}	t_vec4;
+
+typedef unsigned int t_cols[2];
+
 // draw_utils.c
-void	draw_line(t_fdf *fdf, t_vec2 a, t_vec2 b);
+void	draw_line(t_fdf *fdf, t_vec2 a, t_vec2 b, t_cols cols);
 
 // map_loader.c
 void	free_mesh(t_mesh *mesh, char *line);
-t_mesh	*load_map(char *path);
+t_mesh	*load_map(int argc, char *argv[]);
 
 // parse_utils.c
 int		count_vals(char *line);

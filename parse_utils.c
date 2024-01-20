@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/16 04:46:29 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/16 08:48:26 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/20 12:17:16 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,11 +69,11 @@ int	parse_nbr_skip(char **str)
 	if (**str != '0')
 		return (-1);
 	(*str)++;
-	if (**str == 'b')
+	if (**str == 'b' || **str == 'B')
 		return ((*str)++, atoi_base_skip(str, 2));
 	else if ('1' <= **str && **str <= '9')
 		return (atoi_base_skip(str, 8));
-	else if (**str == 'x')
+	else if (**str == 'x' || **str == 'X')
 		return ((*str)++, atoi_base_skip(str, 16));
 	else
 		return (0);
