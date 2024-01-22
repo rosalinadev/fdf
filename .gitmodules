@@ -1,3 +1,6 @@
 [submodule "MLX42"]
 	path = MLX42
 	url = https://github.com/remty5/MLX42.git
+[submodule "libft"]
+	path = libft
+	url = https://github.com/remty5/libft.git
