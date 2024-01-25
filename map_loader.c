@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/12 15:49:44 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/20 12:12:24 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/22 14:26:09 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,58 +30,54 @@ void	free_mesh(t_mesh *mesh, char *line)
 		free(line);
 }
 
-static int	parse_value(t_btree *node, int defaults[2], char **line)
+static int	parse_value(t_fdf *fdf, t_btree *node, char **line)
 {
 	int	color;
 	int	alpha;
 
-	if (defaults[0] < 0)
-		defaults[0] = DEFAULT_COLOR;
-	if (defaults[1] < 0)
-		defaults[1] = DEFAULT_ALPHA;
 	node->value = atoi_base_skip(line, 10);
 	if (**line == ',')
 		color = ((*line)++, parse_nbr_skip(line));
 	else
-		color = defaults[0];
+		color = fdf->args.default_color;
 	if (color < 0)
 		return (-1);
 	if (**line == ',')
 		alpha = ((*line)++, parse_nbr_skip(line));
 	else
-		alpha = defaults[1];
+		alpha = fdf->args.default_alpha;
 	if (alpha < 0)
 		return (-1);
 	node->color = color * 0x100 + alpha;
-	ft_printf("[parse_value] val: %d, col: %#X, alp: %#X, res: %#X\n",
-		node->value, color, alpha, node->color);
 	return (0);
 }
 
-// lines[0]: last
-// lines[1]: curr
-static int	parse_line(int count, t_btree *lines[2], int defs[2], char *line)
+static int	parse_line(t_fdf *fdf, int count, t_btree *lines[2], char *line)
 {
 	t_btree	*prev;
+	t_btree	*last;
+	t_btree	*curr;
 
 	prev = NULL;
+	last = lines[0];
+	curr = lines[1];
 	while (count--)
 	{
-		if (lines[0] != NULL)
-			lines[0]->left = lines[1];
+		if (last != NULL)
+			last->left = curr;
 		if (prev != NULL)
-			prev->right = lines[1];
-		if (parse_value(lines[1], defs, &line) < 0)
+			prev->right = curr;
+		if (parse_value(fdf, curr, &line) < 0)
 			return (-1);
-		prev = lines[1];
-		if (lines[0] != NULL)
-			lines[0] = lines[0]->right;
-		lines[1]++;
+		prev = curr;
+		if (last != NULL)
+			last = last->right;
+		curr++;
 	}
 	return (0);
 }
 
-static int	parse_map(t_mesh *mesh, int defs[2], int fd)
+static int	parse_map(t_fdf *fdf, int fd)
 {
 	char	*line;
 	int		n;
@@ -94,41 +90,33 @@ static int	parse_map(t_mesh *mesh, int defs[2], int fd)
 		n = count_vals(line);
 		if (n)
 		{
-			if (n > mesh->width)
-				mesh->width = n;
+			if (n > fdf->mesh->width)
+				fdf->mesh->width = n;
 			curr = ((last = curr), ft_calloc(n, sizeof(t_btree)));
 			if (curr == NULL)
-				return (free_mesh(mesh, line), -1);
-			if (mesh->values == NULL)
-				mesh->values = curr;
-			if (parse_line(n, (t_btree *[2]){last, curr}, defs, line) < 0)
-				return (free_mesh(mesh, line), -1);
-			mesh->height++;
+				return (free_mesh(fdf->mesh, line), -1);
+			if (fdf->mesh->values == NULL)
+				fdf->mesh->values = curr;
+			if (parse_line(fdf, n, (t_btree *[2]){last, curr}, line) < 0)
+				return (free_mesh(fdf->mesh, line), -1);
+			fdf->mesh->height++;
 		}
 		line = (free(line), get_next_line(fd));
 	}
 	return (0);
 }
 
-t_mesh	*load_map(int argc, char *argv[])
+void	load_map(t_fdf *fdf)
 {
-	t_mesh	*mesh;
 	int		fd;
 	int		defaults[2];
 
-	if (!argc)
-		return (NULL);
-	fd = open(*argv, O_RDONLY);
+	fd = open(fdf->args.map_path, O_RDONLY);
 	defaults[0] = ((defaults[1] = -1), -1);
-	if (argc >= 2)
-		defaults[0] = parse_nbr_skip(argv + 1);
-	if (argc >= 3)
-		defaults[1] = parse_nbr_skip(argv + 2);
-	mesh = ft_calloc(1, sizeof(t_mesh));
-	if (fd == -1 || mesh == NULL)
-		return ((((fd != -1 && (close(fd) || true)) || true)
-				&& (mesh != NULL && (free(mesh), true))), NULL);
-	if (parse_map(mesh, defaults, fd) < 0)
-		return (close(fd), NULL);
-	return (mesh);
+	fdf->mesh = ft_calloc(1, sizeof(t_mesh));
+	if (fd == -1 || fdf->mesh == NULL)
+		return ((void)(((fd != -1 && (close(fd) || true)) || true)
+			&& (fdf->mesh != NULL && (free(fdf->mesh), true))));
+	if (parse_map(fdf, fd) < 0)
+		return ((void)close(fd));
 }
