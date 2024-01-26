@@ -6,44 +6,44 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 16:57:19 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/22 17:23:24 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/26 17:02:49 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fdf.h"
 
+static t_point	proj2d(t_fdf *fdf, t_coords c, t_btree *node)
+{
+	t_point	point;
+
+	ft_printf("x:%d,y:%d,v:%d\n", c.x, c.y, node->value);
+	point.pos.x = c.x * fdf->scale + fdf->trans.x;
+	point.pos.y = c.y * fdf->scale + fdf->trans.y;
+	point.col = convert_to_col(node->color);
+	return (point);
+}
+
 // TODO assert node exists before calling
-void	traverse(t_fdf *fdf, t_btree *node, t_point *last)
+static void	traverse(t_fdf *fdf, t_coords c, t_btree *node, t_point *last)
 {
 	t_point	next;
 
 	if (last == NULL)
-		return (next = (t_point){{fdf->scale, fdf->scale},
-			convert_to_col(node->color)}, traverse(fdf, node, &next));
-	//ft_printf("[node] val: %d\n", node->value);
-	//ft_printf("       color: 0x%X\n", node->color);
+		return (next = fdf->proj(fdf, c, node), traverse(fdf, c, node, &next));
 	node->checked = !node->checked;
 	if (node->left)
 	{
-		//ft_printf("[%2d]   left: %d\n", node->value, node->left->value);
-		next = (t_point){{last->pos.x, last->pos.y + fdf->scale}, convert_to_col(node->left->color)};
+		next = fdf->proj(fdf, (t_coords){c.x, c.y + 1}, node->left);
 		draw_line(fdf, *last, &next);
 		if (node->checked != node->left->checked)
-		{
-			//ft_printf("[%2d]   going left...\n", node->value);
-			traverse(fdf, node->left, &next);
-		}
+			traverse(fdf, (t_coords){c.x, c.y + 1}, node->left, &next);
 	}
 	if (node->right)
 	{
-		//ft_printf("[%2d]   right: %d\n", node->value, node->right->value);
-		next = (t_point){{last->pos.x + fdf->scale, last->pos.y}, convert_to_col(node->right->color)};
+		next = fdf->proj(fdf, (t_coords){c.x + 1, c.y}, node->right);
 		draw_line(fdf, *last, &next);
 		if (node->checked != node->right->checked)
-		{
-			//ft_printf("[%2d]   going right...\n", node->value);
-			traverse(fdf, node->right, &next);
-		}
+			traverse(fdf, (t_coords){c.x + 1, c.y}, node->right, &next);
 	}
 }
 
@@ -55,6 +55,8 @@ static int	parse_args(t_fdf *fdf, int argc, char *argv[])
 	fdf->args.map_path = argv[1];
 	if (argc > 2)
 		fdf->args.fullscreen = !ft_strcmp(argv[2], "--fullscreen");
+	else
+		fdf->args.fullscreen = false;
 	if (argc > 3)
 		fdf->args.default_color = parse_nbr_skip(&argv[3]);
 	else
@@ -82,8 +84,10 @@ static void	init_fdf(t_fdf *fdf)
 	}
 	mlx_set_setting(MLX_FULLSCREEN, fdf->args.fullscreen);
 	fdf->mlx = mlx_init(fdf->width, fdf->height, "fdf", !fdf->args.fullscreen);
+	fdf->proj = &proj2d;
+	fdf->trans = (t_vec3){0, 0, 0};
 	fdf->zoom = 1;
-	fdf->scale = 2;
+	fdf->scale = 3;
 	fdf->res = 0.5;
 }
 
@@ -92,9 +96,10 @@ static void	ft_hook(void *state)
 	t_fdf		*fdf;
 	static int	i = 0;
 
+	return;
 	fdf = state;
 	ft_printf("rendering i:%d\n", i);
-	traverse(fdf, fdf->mesh->values, NULL);
+	traverse(fdf, (t_coords){0, 0}, fdf->mesh->values, NULL);
 	i++;
 }
 
@@ -119,7 +124,7 @@ int	main(int argc, char *argv[])
 		return (EXIT_FAILURE);
 	ft_printf("starting render...\n");
 	if (fdf.mesh->values)
-		traverse(&fdf, fdf.mesh->values, NULL);
+		traverse(&fdf, (t_coords){0, 0}, fdf.mesh->values, NULL);
 	ft_printf("render complete\n");
 	mlx_loop_hook(fdf.mlx, &ft_hook, &fdf);
 	mlx_loop(fdf.mlx);

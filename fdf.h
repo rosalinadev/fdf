@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 18:09:07 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/22 12:17:41 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/26 15:54:29 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,12 @@ typedef struct s_point
 	t_col	col;
 }	t_point;
 
+typedef struct s_coords
+{
+	int	x;
+	int	y;
+}	t_coords;
+
 typedef struct s_btree
 {
 	int				value;
@@ -86,6 +92,7 @@ typedef struct s_fdf
 	t_args		args;
 	int			width;
 	int			height;
+	t_point		(*proj)(struct s_fdf *, t_coords, t_btree *);
 	t_vec3		trans;
 	float		zoom;
 	float		scale;
