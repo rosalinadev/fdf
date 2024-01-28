@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/12 15:49:44 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/22 14:26:09 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/28 03:26:12 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,7 @@ static int	parse_map(t_fdf *fdf, int fd)
 	return (0);
 }
 
-void	load_map(t_fdf *fdf)
+int	load_map(t_fdf *fdf)
 {
 	int		fd;
 	int		defaults[2];
@@ -115,8 +115,14 @@ void	load_map(t_fdf *fdf)
 	defaults[0] = ((defaults[1] = -1), -1);
 	fdf->mesh = ft_calloc(1, sizeof(t_mesh));
 	if (fd == -1 || fdf->mesh == NULL)
-		return ((void)(((fd != -1 && (close(fd) || true)) || true)
-			&& (fdf->mesh != NULL && (free(fdf->mesh), true))));
+	{
+		if (fd != -1)
+			close(fd);
+		if (fdf->mesh != NULL)
+			fdf->mesh = (free(fdf->mesh), NULL);
+		return (-1);
+	}
 	if (parse_map(fdf, fd) < 0)
-		return ((void)close(fd));
+		return (close(fd), -1);
+	return (0);
 }

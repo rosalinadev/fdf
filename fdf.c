@@ -6,46 +6,11 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 16:57:19 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/26 17:02:49 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/28 03:58:39 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fdf.h"
-
-static t_point	proj2d(t_fdf *fdf, t_coords c, t_btree *node)
-{
-	t_point	point;
-
-	ft_printf("x:%d,y:%d,v:%d\n", c.x, c.y, node->value);
-	point.pos.x = c.x * fdf->scale + fdf->trans.x;
-	point.pos.y = c.y * fdf->scale + fdf->trans.y;
-	point.col = convert_to_col(node->color);
-	return (point);
-}
-
-// TODO assert node exists before calling
-static void	traverse(t_fdf *fdf, t_coords c, t_btree *node, t_point *last)
-{
-	t_point	next;
-
-	if (last == NULL)
-		return (next = fdf->proj(fdf, c, node), traverse(fdf, c, node, &next));
-	node->checked = !node->checked;
-	if (node->left)
-	{
-		next = fdf->proj(fdf, (t_coords){c.x, c.y + 1}, node->left);
-		draw_line(fdf, *last, &next);
-		if (node->checked != node->left->checked)
-			traverse(fdf, (t_coords){c.x, c.y + 1}, node->left, &next);
-	}
-	if (node->right)
-	{
-		next = fdf->proj(fdf, (t_coords){c.x + 1, c.y}, node->right);
-		draw_line(fdf, *last, &next);
-		if (node->checked != node->right->checked)
-			traverse(fdf, (t_coords){c.x + 1, c.y}, node->right, &next);
-	}
-}
 
 static int	parse_args(t_fdf *fdf, int argc, char *argv[])
 {
@@ -74,6 +39,7 @@ static void	init_fdf(t_fdf *fdf)
 {
 	fdf->width = 480;
 	fdf->height = 320;
+	// TODO toggle fullscreen?
 	if (fdf->args.fullscreen)
 	{
 		mlx_set_setting(MLX_HEADLESS, true);
@@ -84,23 +50,21 @@ static void	init_fdf(t_fdf *fdf)
 	}
 	mlx_set_setting(MLX_FULLSCREEN, fdf->args.fullscreen);
 	fdf->mlx = mlx_init(fdf->width, fdf->height, "fdf", !fdf->args.fullscreen);
-	fdf->proj = &proj2d;
+	fdf->proj = &proj3d;
 	fdf->trans = (t_vec3){0, 0, 0};
-	fdf->zoom = 1;
-	fdf->scale = 3;
-	fdf->res = 0.5;
-}
-
-static void	ft_hook(void *state)
-{
-	t_fdf		*fdf;
-	static int	i = 0;
-
-	return;
-	fdf = state;
-	ft_printf("rendering i:%d\n", i);
-	traverse(fdf, (t_coords){0, 0}, fdf->mesh->values, NULL);
-	i++;
+	fdf->rot = (t_vec2){asinf(tanf(M_PI / 6)), -M_PI_4};
+	// TODO default zoom?
+	fdf->zoom = 10;
+	// TODO default scale?
+	fdf->scale = 0.1;
+	fdf->res = 0.8;
+	fdf->ctrldown = (fdf->mouseheld = false);
+	mlx_resize_hook(fdf->mlx, &ft_hook_resize, fdf);
+	mlx_key_hook(fdf->mlx, &ft_hook_key, fdf);
+	mlx_scroll_hook(fdf->mlx, &ft_hook_scroll, fdf);
+	mlx_mouse_hook(fdf->mlx, &ft_hook_mouse, fdf);
+	mlx_cursor_hook(fdf->mlx, &ft_hook_cursor, fdf);
+	mlx_loop_hook(fdf->mlx, (void *)&render, fdf);
 }
 
 int	main(int argc, char *argv[])
@@ -110,8 +74,9 @@ int	main(int argc, char *argv[])
 	if (parse_args(&fdf, argc, argv) < 0)
 		return (EXIT_FAILURE);
 	ft_printf("loading map: %s\n", argv[1]);
-	load_map(&fdf);
-	ft_printf("mesh loaded: %p\n", fdf.mesh);
+	if (load_map(&fdf) < 0)
+		return (EXIT_FAILURE);
+	ft_printf("mesh loaded: %p, width:%d, height:%d\n", fdf.mesh, fdf.mesh->width, fdf.mesh->height);
 	if (fdf.mesh == NULL)
 		return (EXIT_FAILURE);
 	ft_printf("starting init\n", fdf.width, fdf.height);
@@ -123,10 +88,8 @@ int	main(int argc, char *argv[])
 	if (!fdf.screen || (mlx_image_to_window(fdf.mlx, fdf.screen, 0, 0) == -1))
 		return (EXIT_FAILURE);
 	ft_printf("starting render...\n");
-	if (fdf.mesh->values)
-		traverse(&fdf, (t_coords){0, 0}, fdf.mesh->values, NULL);
+	render(&fdf);
 	ft_printf("render complete\n");
-	mlx_loop_hook(fdf.mlx, &ft_hook, &fdf);
 	mlx_loop(fdf.mlx);
 	mlx_terminate(fdf.mlx);
 	free_mesh(fdf.mesh, NULL);

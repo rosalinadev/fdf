@@ -6,7 +6,7 @@
 #    By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/06 16:11:02 by rvandepu          #+#    #+#              #
-#    Updated: 2024/01/16 12:53:08 by rvandepu         ###   ########.fr        #
+#    Updated: 2024/01/27 23:20:01 by rvandepu         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,8 +14,10 @@ NAME := fdf
 
 FILES  := fdf \
 		  draw_utils \
+		  hooks \
 		  map_loader \
 		  parse_utils \
+		  projection \
 
 OBJ := $(FILES:%=%.o)
 

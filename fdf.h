@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 18:09:07 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/26 15:54:29 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/28 03:24:15 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,23 +94,39 @@ typedef struct s_fdf
 	int			height;
 	t_point		(*proj)(struct s_fdf *, t_coords, t_btree *);
 	t_vec3		trans;
+	t_vec2		rot;
 	float		zoom;
 	float		scale;
 	float		res;
+	bool		ctrldown;
+	bool		mouseheld;
 }	t_fdf;
 
 // draw_utils.c
+void			render(t_fdf *fdf);
 t_col			convert_to_col(unsigned int color);
 unsigned int	convert_from_col(t_col color);
 void			draw_line(t_fdf *fdf, t_point a, t_point *b);
 
+// hooks.c
+void			ft_hook_resize(int width, int height, void *param);
+void			ft_hook_key(mlx_key_data_t keydata, void *param);
+void			ft_hook_scroll(double xdelta, double ydelta, void *param);
+void			ft_hook_mouse(mouse_key_t button, action_t action,
+					modifier_key_t mods, void *param);
+void			ft_hook_cursor(double xpos, double ypos, void *param);
+
 // map_loader.c
 void			free_mesh(t_mesh *mesh, char *line);
-void			load_map(t_fdf *fdf);
+int				load_map(t_fdf *fdf);
 
 // parse_utils.c
 int				count_vals(char *line);
 int				atoi_base_skip(char **str, int base);
 int				parse_nbr_skip(char **str);
+
+// projection.c
+t_point			proj2d(t_fdf *fdf, t_coords c, t_btree *node);
+t_point			proj3d(t_fdf *fdf, t_coords c, t_btree *node);
 
 #endif
