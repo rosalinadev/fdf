@@ -6,13 +6,13 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/12 15:49:44 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/28 03:26:12 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/28 23:45:22 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fdf.h"
 
-void	free_mesh(t_mesh *mesh, char *line)
+void	free_mesh(t_mesh *mesh)
 {
 	t_btree	*t;
 
@@ -26,8 +26,6 @@ void	free_mesh(t_mesh *mesh, char *line)
 		}
 		free(mesh);
 	}
-	if (line != NULL)
-		free(line);
 }
 
 static int	parse_value(t_fdf *fdf, t_btree *node, char **line)
@@ -36,6 +34,10 @@ static int	parse_value(t_fdf *fdf, t_btree *node, char **line)
 	int	alpha;
 
 	node->value = atoi_base_skip(line, 10);
+	if (node->value < fdf->mesh->min)
+		fdf->mesh->min = node->value;
+	if (node->value > fdf->mesh->max)
+		fdf->mesh->max = node->value;
 	if (**line == ',')
 		color = ((*line)++, parse_nbr_skip(line));
 	else
@@ -94,11 +96,11 @@ static int	parse_map(t_fdf *fdf, int fd)
 				fdf->mesh->width = n;
 			curr = ((last = curr), ft_calloc(n, sizeof(t_btree)));
 			if (curr == NULL)
-				return (free_mesh(fdf->mesh, line), -1);
+				return (free(line), free_mesh(fdf->mesh), -1);
 			if (fdf->mesh->values == NULL)
 				fdf->mesh->values = curr;
 			if (parse_line(fdf, n, (t_btree *[2]){last, curr}, line) < 0)
-				return (free_mesh(fdf->mesh, line), -1);
+				return (free(line), free_mesh(fdf->mesh), -1);
 			fdf->mesh->height++;
 		}
 		line = (free(line), get_next_line(fd));
@@ -109,19 +111,15 @@ static int	parse_map(t_fdf *fdf, int fd)
 int	load_map(t_fdf *fdf)
 {
 	int		fd;
-	int		defaults[2];
 
 	fd = open(fdf->args.map_path, O_RDONLY);
-	defaults[0] = ((defaults[1] = -1), -1);
-	fdf->mesh = ft_calloc(1, sizeof(t_mesh));
-	if (fd == -1 || fdf->mesh == NULL)
-	{
-		if (fd != -1)
-			close(fd);
-		if (fdf->mesh != NULL)
-			fdf->mesh = (free(fdf->mesh), NULL);
+	if (fd < 0)
 		return (-1);
-	}
+	fdf->mesh = ft_calloc(1, sizeof(t_mesh));
+	if (fdf->mesh == NULL)
+		return (close(fd), -1);
+	fdf->mesh->min = INT_MAX;
+	fdf->mesh->max = INT_MIN;
 	if (parse_map(fdf, fd) < 0)
 		return (close(fd), -1);
 	return (0);

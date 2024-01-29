@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/27 23:12:02 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/28 03:58:37 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/29 00:44:42 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,15 +22,33 @@ void	ft_hook_resize(int width, int height, void *param)
 	mlx_resize_image(fdf->screen, width, height);
 }
 
-// TODO other keys, ESC, translation, res, help, fullscreen?
 void	ft_hook_key(mlx_key_data_t keydata, void *param)
 {
 	t_fdf	*fdf;
 
 	fdf = param;
-	if (keydata.key == MLX_KEY_LEFT_CONTROL)
-		fdf->ctrldown = keydata.action != MLX_RELEASE;
-	ft_printf("ctrl:%d\n", fdf->ctrldown);
+	param = (void *)(bool)(keydata.action != MLX_RELEASE);
+	if (keydata.key == MLX_KEY_W)
+		fdf->flags = ft_bit_set_to(fdf->flags, F_FORWARDS, param);
+	else if (keydata.key == MLX_KEY_A)
+		fdf->flags = ft_bit_set_to(fdf->flags, F_LEFT, param);
+	else if (keydata.key == MLX_KEY_S)
+		fdf->flags = ft_bit_set_to(fdf->flags, F_BACKWARDS, param);
+	else if (keydata.key == MLX_KEY_D)
+		fdf->flags = ft_bit_set_to(fdf->flags, F_RIGHT, param);
+	else if (keydata.key == MLX_KEY_Q)
+		fdf->flags = ft_bit_set_to(fdf->flags, F_DOWN, param);
+	else if (keydata.key == MLX_KEY_E)
+		fdf->flags = ft_bit_set_to(fdf->flags, F_UP, param);
+	else if (keydata.key == MLX_KEY_LEFT_CONTROL)
+		fdf->flags = ft_bit_set_to(fdf->flags, F_MOD, param);
+	else if (keydata.key == MLX_KEY_F11)
+		fdf->flags = (mlx_close_window(fdf->mlx),
+				ft_bit_set_to(fdf->flags, F_FULLSCREEN, param));
+	else if (keydata.key == MLX_KEY_T)
+		fdf->flags = ft_bit_set_to(fdf->flags, F_TOGGLE_PROJ, param);
+	else if (keydata.key == MLX_KEY_ESCAPE)
+		mlx_close_window(fdf->mlx);
 }
 
 void	ft_hook_scroll(double xdelta, double ydelta, void *param)
@@ -39,8 +57,10 @@ void	ft_hook_scroll(double xdelta, double ydelta, void *param)
 
 	fdf = param;
 	(void) xdelta;
-	if (fdf->ctrldown)
-		fdf->scale += ydelta / 100.0;
+	if (ft_bit_check(fdf->flags, F_MOD)
+		&& fmax(abs(fdf->mesh->min), abs(fdf->mesh->max)))
+		fdf->scale += ((fmin(fdf->mesh->width, fdf->mesh->height) - 1) / 2.0)
+			/ (fmax(abs(fdf->mesh->min), abs(fdf->mesh->max))) / 100.0 * ydelta;
 	else if (ydelta < 0)
 		fdf->zoom /= 1.1;
 	else if (ydelta > 0)
@@ -55,12 +75,7 @@ void	ft_hook_mouse(mouse_key_t button, action_t action,
 	fdf = param;
 	(void) mods;
 	if (button == MLX_MOUSE_BUTTON_LEFT)
-	{
-		if (action == MLX_PRESS)
-			fdf->mouseheld = true;
-		else if (action == MLX_RELEASE)
-			fdf->mouseheld = false;
-	}
+		fdf->flags = ft_bit_set_to(fdf->flags, F_ROTATE, action != MLX_RELEASE);
 }
 
 void	ft_hook_cursor(double xpos, double ypos, void *param)
@@ -70,7 +85,7 @@ void	ft_hook_cursor(double xpos, double ypos, void *param)
 	static double	lasty = 0;
 
 	fdf = param;
-	if (fdf->mouseheld)
+	if (ft_bit_check(fdf->flags, F_ROTATE))
 	{
 		fdf->rot.y -= (xpos - lastx) / fdf->width * M_PI;
 		fdf->rot.x += (ypos - lasty) / fdf->height * M_PI;
