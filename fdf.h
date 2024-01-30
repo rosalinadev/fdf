@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 18:09:07 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/29 01:17:28 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/30 14:21:34 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,13 +89,14 @@ typedef struct s_args
 typedef unsigned int	t_flags;
 typedef enum e_flag
 {
-	F_FORWARDS,
+	F_FORWARDS = 1,
 	F_BACKWARDS,
 	F_LEFT,
 	F_RIGHT,
 	F_UP,
 	F_DOWN,
 	F_FULLSCREEN,
+	F_QUIT,
 	F_MOD,
 	F_ROTATE,
 	F_TOGGLE_PROJ,

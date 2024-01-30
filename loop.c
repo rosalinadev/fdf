@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/28 12:10:25 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/28 17:30:48 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/01/30 14:27:57 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ static void	traverse(t_fdf *fdf, t_coords c, t_btree *node, t_point *last)
 	}
 }
 
-static void	handle_keys(t_fdf *fdf)
+static void	translate(t_fdf *fdf)
 {
 	static double	last_time = 0;
 	double			time;
@@ -56,11 +56,6 @@ static void	handle_keys(t_fdf *fdf)
 	else if (ft_bit_check(fdf->flags, F_DOWN))
 		fdf->trans.y -= upf;
 	last_time = time;
-	if (ft_bit_check(fdf->flags, F_TOGGLE_PROJ) && fdf->proj == &proj3d)
-		fdf->proj = &proj2d;
-	else if (ft_bit_check(fdf->flags, F_TOGGLE_PROJ) && fdf->proj == &proj2d)
-		fdf->proj = &proj3d;
-	fdf->flags = ft_bit_clear(fdf->flags, F_TOGGLE_PROJ);
 }
 
 void	ft_hook_loop(void *param)
@@ -68,10 +63,18 @@ void	ft_hook_loop(void *param)
 	t_fdf	*fdf;
 
 	fdf = param;
-	handle_keys(fdf);
+	translate(fdf);
+	if (ft_bit_check(fdf->flags, F_TOGGLE_PROJ) && fdf->proj == &proj3d)
+		fdf->proj = &proj2d;
+	else if (ft_bit_check(fdf->flags, F_TOGGLE_PROJ) && fdf->proj == &proj2d)
+		fdf->proj = &proj3d;
+	fdf->flags = ft_bit_clear(fdf->flags, F_TOGGLE_PROJ);
 	if (fdf->mesh->values)
 	{
 		ft_bzero(fdf->screen->pixels, fdf->width * fdf->height * 4);
 		traverse(fdf, (t_coords){0, 0}, fdf->mesh->values, NULL);
 	}
+	if (ft_bit_check(fdf->flags, F_FULLSCREEN)
+		|| ft_bit_check(fdf->flags, F_QUIT))
+		mlx_close_window(fdf->mlx);
 }
