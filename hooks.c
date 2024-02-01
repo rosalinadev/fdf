@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/27 23:12:02 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/30 15:38:14 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/02/01 06:18:11 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,8 @@ void	ft_hook_key(mlx_key_data_t keydata, void *param)
 	bool	b;
 
 	fdf = param;
+	if (keydata.key >= 350)
+		return ;
 	b = keydata.action != MLX_RELEASE;
 	if (g_is_pressed[keydata.key])
 		fdf->flags = ft_bit_set_to(fdf->flags, g_is_pressed[keydata.key], b);
