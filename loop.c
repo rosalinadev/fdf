@@ -6,32 +6,51 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/28 12:10:25 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/30 14:27:57 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/02/05 19:33:35 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fdf.h"
 
-static void	traverse(t_fdf *fdf, t_coords c, t_btree *node, t_point *last)
+bool	alloc_mem(t_fdf *fdf, int depth)
 {
-	t_point	next;
+	t_point	*line;
 
-	if (last == NULL)
-		return (next = fdf->proj(fdf, c, node), traverse(fdf, c, node, &next));
+	if (depth == fdf->mesh->height)
+		return (fdf->mem = ft_calloc(depth, sizeof(t_point *)), fdf->mem);
+	line = ft_calloc(fdf->mesh->width, sizeof(t_point));
+	if (line == NULL)
+		return (false);
+	if (!alloc_mem(fdf, depth + 1))
+		return (free(line), false);
+	return (fdf->mem[depth] = line, true);
+}
+
+void	free_mem(t_fdf *fdf)
+{
+	while (fdf->mesh->height--)
+		free(fdf->mem[fdf->mesh->height]);
+	free(fdf->mem);
+}
+
+static void	traverse(t_fdf *fdf, t_coords c, t_btree *node)
+{
 	node->checked = !node->checked;
 	if (node->right)
 	{
-		next = fdf->proj(fdf, (t_coords){c.x + 1, c.y}, node->right);
-		draw_line(fdf, *last, &next);
+		fdf->mem[c.y][c.x + 1] = \
+				fdf->proj(fdf, (t_coords){c.x + 1, c.y}, node->right);
+		draw_line(fdf, fdf->mem[c.y][c.x], fdf->mem[c.y] + c.x + 1);
 		if (node->checked != node->right->checked)
-			traverse(fdf, (t_coords){c.x + 1, c.y}, node->right, &next);
+			traverse(fdf, (t_coords){c.x + 1, c.y}, node->right);
 	}
 	if (node->left)
 	{
-		next = fdf->proj(fdf, (t_coords){c.x, c.y + 1}, node->left);
-		draw_line(fdf, *last, &next);
+		fdf->mem[c.y + 1][c.x] = \
+				fdf->proj(fdf, (t_coords){c.x, c.y + 1}, node->left);
+		draw_line(fdf, fdf->mem[c.y][c.x], fdf->mem[c.y + 1] + c.x);
 		if (node->checked != node->left->checked)
-			traverse(fdf, (t_coords){c.x, c.y + 1}, node->left, &next);
+			traverse(fdf, (t_coords){c.x, c.y + 1}, node->left);
 	}
 }
 
@@ -72,7 +91,8 @@ void	ft_hook_loop(void *param)
 	if (fdf->mesh->values)
 	{
 		ft_bzero(fdf->screen->pixels, fdf->width * fdf->height * 4);
-		traverse(fdf, (t_coords){0, 0}, fdf->mesh->values, NULL);
+		fdf->mem[0][0] = fdf->proj(fdf, (t_coords){0, 0}, fdf->mesh->values);
+		traverse(fdf, (t_coords){0, 0}, fdf->mesh->values);
 	}
 	if (ft_bit_check(fdf->flags, F_FULLSCREEN)
 		|| ft_bit_check(fdf->flags, F_QUIT))

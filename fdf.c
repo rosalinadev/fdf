@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 16:57:19 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/29 01:32:26 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/02/05 19:30:31 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ static void	get_win_size(t_fdf *fdf, bool fullscreen)
 	}
 }
 
-static void	init_fdf(t_fdf *fdf)
+static bool	init_fdf(t_fdf *fdf)
 {
 	get_win_size(fdf, START_FULLSCREEN);
 	fdf->proj = &proj3d;
@@ -78,6 +78,7 @@ static void	init_fdf(t_fdf *fdf)
 	if (fdf->mesh->width && fdf->mesh->height)
 		fdf->maxsteps = 250000000.0 / (fdf->mesh->width * fdf->mesh->height);
 	fdf->flags = 0;
+	return (alloc_mem(fdf, 0));
 }
 
 static void	init_win(t_fdf *fdf)
@@ -110,7 +111,8 @@ int	main(int argc, char *argv[])
 		return (EXIT_FAILURE);
 	if (fdf.mesh == NULL)
 		return (EXIT_FAILURE);
-	init_fdf(&fdf);
+	if (!init_fdf(&fdf))
+		return (free_mesh(fdf.mesh), EXIT_FAILURE);
 	while (true)
 	{
 		init_win(&fdf);
@@ -124,6 +126,6 @@ int	main(int argc, char *argv[])
 		if (!ft_bit_check(fdf.flags, F_FULLSCREEN))
 			break ;
 	}
-	free_mesh(fdf.mesh);
+	(free_mem(&fdf), free_mesh(fdf.mesh));
 	return (EXIT_SUCCESS);
 }

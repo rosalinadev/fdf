@@ -6,7 +6,7 @@
 /*   By: rvandepu <rvandepu@student.42lehavre.fr>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 18:09:07 by rvandepu          #+#    #+#             */
-/*   Updated: 2024/01/30 14:21:34 by rvandepu         ###   ########.fr       */
+/*   Updated: 2024/02/05 19:30:16 by rvandepu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,6 +118,7 @@ typedef struct s_fdf
 	float		res;
 	int			maxsteps;
 	t_flags		flags;
+	t_point		**mem;
 }	t_fdf;
 
 // map_loader.c
@@ -147,6 +148,8 @@ t_point			proj2d(t_fdf *fdf, t_coords c, t_btree *node);
 t_point			proj3d(t_fdf *fdf, t_coords c, t_btree *node);
 
 // loop.c
+bool			alloc_mem(t_fdf *fdf, int depth);
+void			free_mem(t_fdf *fdf);
 void			ft_hook_loop(void *param);
 
 #endif
